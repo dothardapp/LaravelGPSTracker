@@ -1,61 +1,144 @@
-# LaravelGPSTracker<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🛰️ TrackerGPS - API del Servidor
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Este repositorio contiene el código fuente del backend para el sistema **TrackerGPS**. Se trata de una API RESTful robusta y escalable construida con **Laravel**, diseñada para recibir, almacenar y gestionar datos de localización de múltiples dispositivos en tiempo real, como aplicaciones móviles Android y hardware de rastreo IoT.
 
-## About Laravel
+## ✨ Características Principales
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+* **Gestión de Múltiples Entidades:** Soporte para múltiples usuarios, y múltiples dispositivos de rastreo por cada usuario.
+* **Historial de Rutas Detallado:** Almacena un historial completo de localizaciones para cada dispositivo, incluyendo datos enriquecidos como velocidad, rumbo, altitud y precisión.
+* **API RESTful Clara:** Endpoints bien definidos para la comunicación con diferentes tipos de clientes.
+* **Registro Automático de Dispositivos:** La lógica `firstOrCreate` permite que un nuevo dispositivo se registre automáticamente en el sistema con su primer envío de datos.
+* **Arquitectura Escalable:** Basada en el patrón Modelo-Vista-Controlador (MVC) de Laravel, con una clara separación de responsabilidades que facilita el mantenimiento y la expansión futura.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🛠️ Stack Tecnológico
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+* **PHP** (v8.1+)
+* **Laravel** (v10.x+)
+* **Base de Datos:** Compatible con MySQL / **MariaDB**
+* **Gestor de Dependencias:** **Composer**
 
-## Learning Laravel
+## 🔌 Documentación de la API
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+La API expone los siguientes endpoints. La URL base para todas las llamadas es `http://tu-dominio.com/api/`.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Usuarios (`/users`)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+#### `GET /users`
+Devuelve una lista de todos los usuarios registrados en el sistema. Es utilizado por la app cliente para mostrar las opciones de configuración.
 
-## Laravel Sponsors
+* **Respuesta Exitosa (200 OK)**
+    ```json
+    [
+        {
+            "id": 1,
+            "name": "Victoria",
+            "created_at": "2025-06-19T18:00:00.000000Z",
+            "updated_at": "2025-06-19T18:00:00.000000Z"
+        },
+        {
+            "id": 2,
+            "name": "Julieta",
+            "created_at": "2025-06-19T18:01:00.000000Z",
+            "updated_at": "2025-06-19T18:01:00.000000Z"
+        }
+    ]
+    ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Localizaciones (`/locations`)
 
-### Premium Partners
+#### `POST /locations`
+Endpoint principal para la ingesta de datos. Recibe un punto de localización de un dispositivo y lo almacena en la base de datos. Si el `device_id` es nuevo, crea el dispositivo y lo asocia al `tracker_user_id` proporcionado.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+* **Cuerpo de la Petición (Request Body)**
 
-## Contributing
+| Campo             | Tipo    | Obligatorio | Descripción                               |
+| ----------------- | ------- | ----------- | ----------------------------------------- |
+| `tracker_user_id` | number  | Sí          | El ID del usuario al que pertenece el dispositivo. |
+| `device_id`       | string  | Sí          | El ID único del hardware (ej. UUID del teléfono). |
+| `latitude`        | number  | Sí          | Latitud en grados decimales.              |
+| `longitude`       | number  | Sí          | Longitud en grados decimales.             |
+| `timestamp`       | string  | Sí          | Fecha y hora en formato ISO 8601.         |
+| `speed`           | number  | No          | Velocidad en m/s.                         |
+| `bearing`         | number  | No          | Rumbo en grados (0-360).                  |
+| `altitude`        | number  | No          | Altitud en metros.                        |
+| `accuracy`        | number  | No          | Precisión del punto en metros.            |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+* **Respuesta Exitosa (201 Created)**
+    ```json
+    {
+        "message": "Ubicación guardada con éxito",
+        "location_id": 123
+    }
+    ```
+* **Respuesta de Error (422 Unprocessable Entity)**
+    ```json
+    {
+        "error": "Validación fallida",
+        "details": {
+            "latitude": [
+                "The latitude field is required."
+            ]
+        }
+    }
+    ```
 
-## Code of Conduct
+## 🚀 Instalación y Puesta en Marcha
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Sigue estos pasos para instalar y ejecutar el proyecto en un entorno de desarrollo local.
 
-## Security Vulnerabilities
+1.  **Clonar el Repositorio**
+    ```bash
+    git clone [https://github.com/dothardapp/TrackerGPS.git](https://github.com/dothardapp/TrackerGPS.git)
+    cd TrackerGPS
+    ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+2.  **Instalar Dependencias**
+    Asegúrate de tener Composer instalado.
+    ```bash
+    composer install
+    ```
 
-## License
+3.  **Configurar el Entorno**
+    Crea tu archivo de entorno a partir del ejemplo.
+    ```bash
+    cp .env.example .env
+    ```
+    Luego, genera la clave de la aplicación.
+    ```bash
+    php artisan key:generate
+    ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+4.  **Configurar la Base de Datos**
+    Abre el archivo `.env` y configura las variables de tu base de datos (MariaDB/MySQL).
+    ```env
+    DB_CONNECTION=mysql
+    DB_HOST=127.0.0.1
+    DB_PORT=3306
+    DB_DATABASE=gpstracker
+    DB_USERNAME=root
+    DB_PASSWORD=
+    ```
+
+5.  **Ejecutar las Migraciones**
+    Este comando creará todas las tablas en tu base de datos.
+    ```bash
+    php artisan migrate
+    ```
+
+6.  **Iniciar el Servidor**
+    El servidor de desarrollo de Laravel se iniciará, por defecto, en `http://127.0.0.1:8000`.
+    ```bash
+    php artisan serve
+    ```
+    ¡Tu API ya está en funcionamiento y lista para recibir peticiones!
+
+## 🔮 Futuras Mejoras (Roadmap)
+
+- [ ] Implementar un sistema de autenticación (Laravel Sanctum) para proteger la API.
+- [ ] Desarrollar un dashboard web para visualizar las rutas en un mapa en tiempo real.
+- [ ] Añadir WebSockets para la actualización instantánea de la posición en el mapa web.
+- [ ] Crear un servidor TCP/UDP para soportar una mayor variedad de dispositivos IoT de bajo nivel.
+- [ ] Implementar políticas de archivado o eliminación de datos de localización antiguos.
+
+---
+*Este README fue generado con la ayuda de un asistente de IA.*
